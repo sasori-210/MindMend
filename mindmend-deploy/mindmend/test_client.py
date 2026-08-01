@@ -32,4 +32,4 @@ while True:
     reply = data["choices"][0]["message"]["content"]
     history.append({"role": "assistant", "content": reply})
 
-    print(f"Mira: {reply}\n")
+    print(f"Scyla: {reply}\n")

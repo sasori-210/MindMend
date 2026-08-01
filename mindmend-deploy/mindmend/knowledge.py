@@ -14,9 +14,13 @@ partial translations are safe.
 Wording philosophy: validate first, never rush to fix. Keep it long enough
 to feel like a real reply, short enough to still feel like a person typing,
 not an essay. One open-ended follow-up question per reply, never more.
+
+Conversation depth: a variant's optional "tier" ("open"/"deepen"/"reflective")
+lets the engine get warmer and more specific the longer someone talks about
+the same thing, instead of repeating the same canned line — see engine.py.
 """
 
-BOT_NAME = "Mira"
+BOT_NAME = "Scyla"
 
 SUPPORTED_LANGUAGES = {
     "en": "English",
@@ -91,7 +95,8 @@ INTENT_KEYWORDS = {
                 "ghabrahat", "tension", "batuku"],
     "academic_stress": ["exam", "exams", "assignment", "deadline", "grades", "semester",
                          "project submission", "viva", "backlog", "study pressure", "gpa",
-                         "padhai", "chaduvu", "marks"],
+                         "padhai", "chaduvu", "marks", "college", "faculty", "faculties",
+                         "professor", "lecturer", "hod", "principal"],
     "sadness": ["sad", "down", "depressed", "empty", "hopeless", "crying", "cry",
                 "numb", "low", "unmotivated", "worthless", "udaas", "badhaga"],
     "loneliness": ["lonely", "alone", "no friends", "isolated", "left out", "nobody understands",
@@ -105,7 +110,55 @@ INTENT_KEYWORDS = {
 }
 
 # ---------------------------------------------------------------------------
+# Reluctance handling — when the user signals they don't want to unpack
+# things right now. Checked before normal intent routing (but after crisis),
+# so the bot backs off instead of pushing for more detail.
+# ---------------------------------------------------------------------------
+
+RELUCTANCE_KEYWORDS = {
+    "en": [
+        "dont wanna talk", "don't wanna talk", "dont want to talk", "don't want to talk",
+        "not talking about it", "dont get me started", "don't get me started",
+        "leave it", "drop it", "forget it", "nvm", "never mind", "not now",
+        "i cant even", "i can't even", "not ready to talk",
+    ],
+    "hi": ["nahi bolna", "chhodo", "rehne do", "abhi nahi", "बात नहीं करनी", "छोड़ो", "रहने दो"],
+    "te": ["cheppanu", "cheppalekapotunna", "వద్దు", "వదిలేయ్", "ఇప్పుడు వద్దు"],
+}
+
+RELUCTANT_RESPONSES = {
+    "en": [
+        {"reflection": "Totally fair, no pressure at all. Not everything hard needs to be "
+                        "unpacked right away — sometimes you just need to sit with being annoyed "
+                        "or upset for a bit without turning it into a whole conversation.",
+         "follow_up": "I'm not going anywhere. Whenever you feel like letting it out — later "
+                       "tonight, tomorrow, next week — I'll still be here, no explanation owed.",
+         "emotion": "gentle"},
+        {"reflection": "Okay, we'll leave it there for now. You don't owe me the story, and "
+                        "honestly you don't owe yourself one right this second either.",
+         "follow_up": "Go do whatever helps you switch off for a bit — I'll just be here quietly "
+                       "if you change your mind later.",
+         "emotion": "warm"},
+    ],
+    "hi": [
+        {"reflection": "बिल्कुल ठीक है, कोई दबाव नहीं। हर मुश्किल बात को अभी खोलना ज़रूरी नहीं — "
+                        "कभी-कभी बस थोड़ी देर परेशान रहना भी ठीक है, बिना उसे पूरी बातचीत बनाए।",
+         "follow_up": "मैं कहीं नहीं जा रही। जब भी मन करे बताने का — आज रात, कल, अगले हफ्ते — मैं यहीं मिलूँगी।",
+         "emotion": "gentle"},
+    ],
+    "te": [
+        {"reflection": "పూర్తిగా ఓకే, ఎలాంటి ఒత్తిడి లేదు. ప్రతి కష్టమైన విషయాన్ని ఇప్పుడే విప్పి "
+                        "చెప్పాల్సిన అవసరం లేదు — కొన్నిసార్లు కొంచెం సేపు చిరాకుగా ఉండటం కూడా సరైనదే.",
+         "follow_up": "నేను ఎక్కడికీ వెళ్ళడం లేదు. మీకు చెప్పాలనిపించినప్పుడు — ఈరాత్రి, రేపు, తర్వాత ఎప్పుడైనా — నేను ఇక్కడే ఉంటాను.",
+         "emotion": "gentle"},
+    ],
+}
+
+# ---------------------------------------------------------------------------
 # Response bank per language. Each intent: list of variants.
+# Variants may carry a "tier": "open" (default, first mention), "deepen"
+# (second mention of the same intent — ask for specifics), or "reflective"
+# (third+ mention — stop probing, just validate and offer a soft landing).
 # ---------------------------------------------------------------------------
 
 RESPONSES = {
@@ -148,6 +201,20 @@ RESPONSES = {
                             "you can think about. You're allowed to find this hard, even if other people seem "
                             "to handle it fine.",
              "follow_up": "Have you managed any real breaks lately, or has it just been go-go-go?", "emotion": "gentle"},
+            {"reflection": "Okay, tell me the actual details, not just the summary. When it's faculty or "
+                            "coursework piling unfair weight on you — work that isn't even really yours to do, "
+                            "unfair grading, an impossible deadline — it stops feeling like learning and starts "
+                            "feeling like you're being used. That frustration makes complete sense.",
+             "follow_up": "What exactly happened — was it extra work dumped on you, something unfair from a "
+                           "professor, a group project falling apart, or something else entirely?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "You don't have to relive the whole story right now if you're not up for it — "
+                            "being annoyed about this without explaining every detail is a completely valid "
+                            "way to spend your evening.",
+             "follow_up": "Whatever you can manage tonight — even 20 minutes on something that's actually "
+                           "yours, not theirs — counts for something. And if tonight isn't that night, "
+                           "resting is a fair choice too.",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "sadness": [
             {"reflection": "I hear you, and that heaviness is real — you don't have to explain it away or "
@@ -157,6 +224,20 @@ RESPONSES = {
             {"reflection": "Feeling numb or low like this can be its own quiet kind of exhausting, even when "
                             "nothing dramatic is happening on the outside.",
              "follow_up": "Is there anything at all — even something small — that's felt okay today?", "emotion": "somber"},
+            {"reflection": "Okay, I'm listening properly now, not just nodding along. Whatever's underneath "
+                            "this is allowed to be messy — you don't need to have it all figured out or "
+                            "explained neatly before you tell me.",
+             "follow_up": "Was it one specific thing that happened today, or has this been quietly building "
+                           "for a while now, with people, with college, with something at home, or just "
+                           "everything landing at once?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "You don't have to keep explaining this or dig for a tidy reason. Some days are "
+                            "just heavy, and it's genuinely okay if today is one you can't fully make sense "
+                            "of yet.",
+             "follow_up": "I'm not going to push you toward fixing anything right now. If even a small part "
+                           "of tonight can go toward something that isn't the thing that hurt, that's good. "
+                           "If not, that's okay too — I'm still here either way.",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "loneliness": [
             {"reflection": "Feeling like no one really gets it is such a heavy, isolating kind of pain, and "
@@ -169,6 +250,18 @@ RESPONSES = {
                             "that came out of nowhere today. Anger usually shows up when something you actually "
                             "care about got crossed or ignored.",
              "follow_up": "What actually set it off today?", "emotion": "concerned"},
+            {"reflection": "That's genuinely infuriating, especially when you can't just say no because your "
+                            "marks, attendance, or approvals depend on going along with it. That's not you "
+                            "overreacting — that's a fair response to being treated unfairly.",
+             "follow_up": "What exactly did they make you do — work that clearly isn't your job, or was it "
+                           "more about how you were treated while doing it?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "You don't owe anyone, including me, a full play-by-play right now. Being "
+                            "frustrated and not wanting to relive it by typing it all out is completely fair.",
+             "follow_up": "Whatever helps your brain stop replaying it tonight — music, a walk, something "
+                           "dumb on your phone — go do that first. We can talk it through properly another "
+                           "time if you want to.",
+             "emotion": "gentle", "tier": "reflective"},
         ],
         "sleep": [
             {"reflection": "Running on no sleep makes literally everything harder — your patience, your focus, "
@@ -194,6 +287,16 @@ RESPONSES = {
             {"reflection": "That sounds like a genuinely lot to be carrying around, especially if you've "
                             "been holding it in for a while.",
              "follow_up": "How long has this been going on?", "emotion": "concerned"},
+            {"reflection": "Okay, I want the real version, not the polite summary. Whatever it is, take your "
+                            "time getting into it — I'm not going anywhere.",
+             "follow_up": "Where do you want to start — the beginning, or just whatever's loudest in your "
+                           "head right now?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "For now, you don't have to have this figured out or explained perfectly. That's "
+                            "genuinely okay.",
+             "follow_up": "No advice for a second — just, I'm glad you're talking to me instead of sitting "
+                           "with this completely alone. Whenever you want to say more, I'm here.",
+             "emotion": "soothing", "tier": "reflective"},
         ],
     },
     "hi": {
@@ -221,11 +324,32 @@ RESPONSES = {
                             "टिकी है, और यह दबाव असली है, बनावटी नहीं। यह थका देने वाला होता है, खासकर जब लगे "
                             "कि बाकी सबने सब कुछ संभाल लिया है।",
              "follow_up": "इसमें सबसे भारी हिस्सा अभी क्या लग रहा है?", "emotion": "concerned"},
+            {"reflection": "अच्छा, अब असली बात बताइए, बस सार नहीं। जब फैकल्टी या पढ़ाई आप पर ऐसा काम थोप देती है "
+                            "जो असल में आपका है ही नहीं, तो यह सीखना नहीं, इस्तेमाल होना लगने लगता है। यह गुस्सा "
+                            "आना बिल्कुल जायज़ है।",
+             "follow_up": "असल में क्या हुआ — कोई अतिरिक्त काम थोपा गया, कोई अनुचित बात हुई, या ग्रुप प्रोजेक्ट "
+                           "बिगड़ गया?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "आपको अभी पूरी कहानी दोबारा जीने की ज़रूरत नहीं है अगर मन नहीं है। बिना हर बात "
+                            "समझाए भी नाराज़ रहना पूरी तरह ठीक है।",
+             "follow_up": "आज रात जो भी कर पाएँ — अपने लिए 20 मिनट भी — वह मायने रखता है। और अगर आज नहीं, "
+                           "तो आराम करना भी एक सही चुनाव है।",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "sadness": [
             {"reflection": "मैं सुन रही हूँ, और यह भारीपन असली है — इसे मुझे या किसी को भी समझाने की ज़रूरत "
                             "नहीं है। कभी-कभी उदासी को सही होने के लिए किसी साफ वजह की ज़रूरत नहीं होती।",
              "follow_up": "यह कब से आपके साथ ऐसे ही बना हुआ है?", "emotion": "somber"},
+            {"reflection": "अच्छा, अब मैं ध्यान से सुन रही हूँ। इसके नीचे जो भी है, वह उलझा हुआ हो सकता है — "
+                            "बताने से पहले उसे सुलझाना ज़रूरी नहीं।",
+             "follow_up": "क्या यह आज किसी एक बात से हुआ, या यह धीरे-धीरे जमा हो रहा था — लोगों से, कॉलेज से, "
+                           "घर से, या बस सब कुछ एक साथ?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "आपको इसे साफ वजह में समझाने की ज़रूरत नहीं। कुछ दिन बस भारी होते हैं, और यह ठीक है "
+                            "अगर आज वैसा ही एक दिन है।",
+             "follow_up": "मैं अभी आपको कुछ ठीक करने के लिए नहीं कहूँगी। अगर आज रात का थोड़ा हिस्सा भी किसी "
+                           "अच्छी चीज़ में जाए, तो अच्छा है। नहीं भी गया, तो भी मैं यहीं हूँ।",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "loneliness": [
             {"reflection": "ऐसा महसूस होना कि कोई सच में समझता नहीं है, बहुत भारी और अकेला कर देने वाला दर्द "
@@ -236,6 +360,15 @@ RESPONSES = {
             {"reflection": "यह गुस्सा लग रहा है काफी समय से जमा हो रहा था, अचानक नहीं आया। गुस्सा अक्सर तब "
                             "आता है जब कोई ऐसी चीज़ जो आपको सच में मायने रखती है, नज़रअंदाज़ हो जाती है।",
              "follow_up": "आज असल में इसे किस बात ने भड़काया?", "emotion": "concerned"},
+            {"reflection": "यह सच में गुस्सा दिलाने वाला है, खासकर जब आप मना भी नहीं कर सकते क्योंकि मार्क्स "
+                            "या अटेंडेंस उसी पर टिकी है। यह ओवररिएक्ट करना नहीं, यह अन्याय पर सही प्रतिक्रिया है।",
+             "follow_up": "उन्होंने असल में क्या करवाया — कोई ऐसा काम जो आपका था ही नहीं, या बात व्यवहार की है?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "अभी आपको मुझे भी पूरी कहानी बताने की ज़रूरत नहीं। नाराज़ होना और उसे दोबारा टाइप "
+                            "करके न जीना, दोनों ठीक हैं।",
+             "follow_up": "जो भी आज रात दिमाग को शांत करने में मदद करे — गाना, टहलना, कुछ भी — पहले वह "
+                           "कीजिए। बाकी बात बाद में हो सकती है।",
+             "emotion": "gentle", "tier": "reflective"},
         ],
         "sleep": [
             {"reflection": "नींद पूरी न होने से सच में हर चीज़ मुश्किल लगने लगती है — धैर्य, फोकस, यहाँ तक कि "
@@ -280,11 +413,32 @@ RESPONSES = {
             {"reflection": "డెడ్‌లైన్‌లు మరియు మార్కులు కొన్నిసార్లు మీ మొత్తం విలువ ఒక సమర్పణపైనే ఆధారపడి "
                             "ఉన్నట్టు అనిపించేలా చేస్తాయి, మరియు ఆ ఒత్తిడి నిజమైనదే, అతిశయోక్తి కాదు.",
              "follow_up": "దీంట్లో ఇప్పుడు అత్యంత భారంగా అనిపిస్తున్న భాగం ఏమిటి?", "emotion": "concerned"},
+            {"reflection": "సరే, ఇప్పుడు అసలు వివరాలు చెప్పండి, సారాంశం కాదు. ఫ్యాకల్టీ మీపై నిజంగా మీది కాని "
+                            "పనిని రుద్దినప్పుడు, అది చదువులా కాకుండా వాడుకోబడుతున్నట్టు అనిపిస్తుంది. ఆ కోపం "
+                            "పూర్తిగా సబబే.",
+             "follow_up": "నిజంగా ఏం జరిగింది — మీది కాని అదనపు పని అప్పగించారా, అన్యాయంగా వ్యవహరించారా, "
+                           "లేదా గ్రూప్ ప్రాజెక్ట్ చెడిపోయిందా?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "మీకు ఇష్టం లేకపోతే ఇప్పుడు మొత్తం కథ మళ్ళీ చెప్పాల్సిన అవసరం లేదు. ప్రతి వివరం "
+                            "చెప్పకుండా కోపంగా ఉండటం కూడా పూర్తిగా సరైనదే.",
+             "follow_up": "ఈరాత్రి మీరు చేయగలిగింది ఏదైనా — మీ కోసం 20 నిమిషాలైనా — అది ముఖ్యమే. లేకపోతే, "
+                           "విశ్రాంతి తీసుకోవడం కూడా సరైన ఎంపికే.",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "sadness": [
             {"reflection": "నేను వింటున్నాను, మరియు ఆ బరువు నిజమైనది — దాన్ని నాకు లేదా ఎవరికైనా వివరించాల్సిన "
                             "అవసరం లేదు. కొన్నిసార్లు విచారానికి సరైనదిగా ఉండటానికి స్పష్టమైన కారణం అవసరం లేదు.",
              "follow_up": "ఇది మీతో ఎంతకాలంగా ఇలా ఉంది?", "emotion": "somber"},
+            {"reflection": "సరే, ఇప్పుడు నేను నిజంగా జాగ్రత్తగా వింటున్నాను. దీని కింద ఏముందో అది గజిబిజిగా "
+                            "ఉండొచ్చు — చెప్పే ముందు దాన్ని సర్దుకోవాల్సిన అవసరం లేదు.",
+             "follow_up": "ఇది ఈరోజు ఒక్క విషయం వల్ల వచ్చిందా, లేదా నిదానంగా పేరుకుపోతోందా — మనుషుల వల్ల, "
+                           "కాలేజీ వల్ల, ఇంటి వల్ల, లేదా అన్నీ కలిసి ఒకేసారా?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "దీన్ని స్పష్టమైన కారణంతో వివరించాల్సిన అవసరం లేదు. కొన్ని రోజులు అలా బరువుగానే "
+                            "ఉంటాయి, ఈరోజు అలాంటిదే అయితే అది సరైనదే.",
+             "follow_up": "ఇప్పుడు నేను మిమ్మల్ని ఏదైనా సరిచేయమని అడగను. ఈరాత్రిలో కొంచెమైనా మంచి విషయానికి "
+                           "సమయం వెళ్తే మంచిదే, లేకపోయినా నేను ఇక్కడే ఉంటాను.",
+             "emotion": "soothing", "tier": "reflective"},
         ],
         "loneliness": [
             {"reflection": "ఎవరూ నిజంగా అర్థం చేసుకోవడం లేదని అనిపించడం చాలా బరువైన, ఒంటరితనం కలిగించే బాధ, "
@@ -294,6 +448,16 @@ RESPONSES = {
         "anger": [
             {"reflection": "ఈ కోపం కొంతకాలంగా పేరుకుపోతున్నట్టు అనిపిస్తోంది, ఈరోజు అకస్మాత్తుగా వచ్చింది కాదు.",
              "follow_up": "ఈరోజు దీన్ని నిజంగా ఏది రేకెత్తించింది?", "emotion": "concerned"},
+            {"reflection": "ఇది నిజంగా చిరాకు తెప్పించే విషయం, ముఖ్యంగా మార్కులు లేదా అటెండెన్స్ దానిపై "
+                            "ఆధారపడి ఉన్నప్పుడు మీరు వద్దు అని చెప్పలేరు. ఇది మీరు ఎక్కువగా స్పందించడం కాదు, "
+                            "అన్యాయానికి సరైన స్పందనే.",
+             "follow_up": "వాళ్ళు నిజంగా మీతో ఏం చేయించారు — మీది కాని పనా, లేదా ప్రవర్తన సమస్యా?",
+             "emotion": "concerned", "tier": "deepen"},
+            {"reflection": "ఇప్పుడు నాకు కూడా పూర్తి కథ చెప్పాల్సిన అవసరం లేదు. కోపంగా ఉండటం, దాన్ని మళ్ళీ "
+                            "టైప్ చేసి జీవించకపోవడం — రెండూ సరైనవే.",
+             "follow_up": "ఈరాత్రి మీ మనసును శాంతపరచడానికి ఏది సహాయపడితే అది ముందు చేయండి — పాట, నడక, ఏదైనా. "
+                           "మిగతా మాట తర్వాత మాట్లాడుకోవచ్చు.",
+             "emotion": "gentle", "tier": "reflective"},
         ],
         "sleep": [
             {"reflection": "నిద్ర లేకుండా ఉండటం నిజంగా ప్రతిదాన్ని కష్టతరం చేస్తుంది — ఓర్పు, దృష్టి, మీ సొంత "

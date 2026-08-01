@@ -1,7 +1,7 @@
 # MindMend Chatbot — Masquerade '26
 
 A peer-support webapp for students: a chat page with a "breathing orb"
-companion (Mira) that shows emotion, speaks and listens by voice, and
+companion (Scyla) that shows emotion, speaks and listens by voice, and
 replies in English, Hindi, or Telugu — plus a backend that also satisfies
 the Masquerade '26 endpoint spec (`POST /chat/completions`).
 
@@ -13,12 +13,12 @@ browser's built-in Web Speech API (Chrome/Edge), not a paid service.
 
 - **Full webpage** at `/` — chat UI, not just a raw endpoint.
 - **Breathing orb avatar** — pulses on a slow 16-second box-breathing rhythm
-  (4s in, 4s hold, 4s out, 4s hold) and changes color/glow based on Mira's
+  (4s in, 4s hold, 4s out, 4s hold) and changes color/glow based on Scyla's
   detected emotion for that reply (warm, gentle, concerned, soothing,
   encouraging, celebratory, somber, crisis). It's both a mood display and a
   literal grounding exercise running in the background.
 - **Voice in and out** — tap the mic to speak instead of typing (browser
-  speech-to-text), and Mira's replies are read aloud (browser
+  speech-to-text), and Scyla's replies are read aloud (browser
   text-to-speech). Toggle voice off with the speaker icon top-right.
 - **Multilingual** — English, Hindi (हिंदी), and Telugu (తెలుగు), switchable
   mid-conversation from the dropdown. Crisis detection and the safety
@@ -81,7 +81,7 @@ for something this personal.
 ## Where to go from here (optional)
 
 - Persist conversations/mood per user in Firestore (you already have this
-  set up for MindMend) so Mira can reference past check-ins.
+  set up for MindMend) so Scyla can reference past check-ins.
 - Add more languages by extending `RESPONSES`, `CRISIS_RESPONSE`, and
   `GROUNDING_TECHNIQUES` in `knowledge.py`, plus the `MIC_LANG`/`SPEECH_LANG`
   maps in `index.html`.
