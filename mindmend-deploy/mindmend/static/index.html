@@ -277,13 +277,13 @@
       <option value="hi">हिंदी</option>
       <option value="te">తెలుగు</option>
     </select>
-    <button class="icon-btn" id="voice-toggle" title="Toggle Mira's voice" aria-label="Toggle voice replies">🔊</button>
+    <button class="icon-btn" id="voice-toggle" title="Toggle Scyla's voice" aria-label="Toggle voice replies">🔊</button>
   </div>
 </div>
 
 <div class="orb-zone">
   <div class="orb" id="orb"></div>
-  <div class="orb-label" id="orb-label">Mira is here</div>
+  <div class="orb-label" id="orb-label">Scyla is here</div>
 </div>
 
 <div class="chat-wrap">
@@ -316,9 +316,9 @@ const EMOTION_COLOR = {
 };
 
 const EMOTION_LABEL = {
-  en: { warm:"Mira feels warm", gentle:"Mira is listening gently", concerned:"Mira is concerned for you",
-        soothing:"Mira is here to steady you", encouraging:"Mira is cheering you on",
-        celebratory:"Mira is happy with you", somber:"Mira is sitting with you", crisis:"Mira is right here with you" },
+  en: { warm:"Scyla feels warm", gentle:"Scyla is listening gently", concerned:"Scyla is concerned for you",
+        soothing:"Scyla is here to steady you", encouraging:"Scyla is cheering you on",
+        celebratory:"Scyla is happy with you", somber:"Scyla is sitting with you", crisis:"Scyla is right here with you" },
   hi: { warm:"मीरा को अच्छा लग रहा है", gentle:"मीरा ध्यान से सुन रही है", concerned:"मीरा को आपकी चिंता है",
         soothing:"मीरा आपको संभालने के लिए यहाँ है", encouraging:"मीरा आपका हौसला बढ़ा रही है",
         celebratory:"मीरा आपके साथ खुश है", somber:"मीरा आपके साथ बैठी है", crisis:"मीरा अभी आपके साथ है" },
@@ -498,9 +498,9 @@ if(SpeechRecognition){
 
 // Initial greeting
 setEmotion('gentle');
-addBubble('bot', "Hey, I'm Mira. This is a quiet space to just talk — no judgment, no pressure. What's actually going on with you today?", 'warm');
+addBubble('bot', "Hey, I'm Scyla. This is a quiet space to just talk — no judgment, no pressure. What's actually going on with you today?", 'warm');
 setEmotion('warm');
-history.push({ role: 'assistant', content: "Hey, I'm Mira. This is a quiet space to just talk — no judgment, no pressure. What's actually going on with you today?" });
+history.push({ role: 'assistant', content: "Hey, I'm Scyla. This is a quiet space to just talk — no judgment, no pressure. What's actually going on with you today?" });
 </script>
 
 </body>
